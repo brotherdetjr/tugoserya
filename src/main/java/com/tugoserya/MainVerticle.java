@@ -21,6 +21,7 @@ import io.vertx.ext.web.handler.UserSessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import org.jacpfx.vertx.spring.SpringVerticle;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 
@@ -28,6 +29,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.TEMPORARY_REDIRECT;
 import static io.vertx.ext.auth.shiro.PropertiesProviderConstants.PROPERTIES_PROPS_PATH_FIELD;
 
+@Component
 @SpringVerticle(springConfig=MainConfiguration.class)
 public class MainVerticle extends AbstractVerticle {
 
@@ -58,6 +60,8 @@ public class MainVerticle extends AbstractVerticle {
 			ctx.clearUser();
 			ctx.response().putHeader("location", "/login.html").setStatusCode(FOUND.code()).end();
 		});
+		router.route("/login.html").handler(StaticHandler.create());
+		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
 	}
 
 }
