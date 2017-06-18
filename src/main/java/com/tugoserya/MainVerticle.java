@@ -19,19 +19,19 @@ import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.UserSessionHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
-import org.jacpfx.vertx.spring.SpringVerticle;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.TEMPORARY_REDIRECT;
 import static io.vertx.ext.auth.shiro.PropertiesProviderConstants.PROPERTIES_PROPS_PATH_FIELD;
+import static org.slf4j.LoggerFactory.getLogger;
 
-@Component
-@SpringVerticle(springConfig=MainConfiguration.class)
 public class MainVerticle extends AbstractVerticle {
+
+	private static final Logger log = getLogger(MainVerticle.class);
 
 	@Autowired
 	private Router router;
@@ -60,7 +60,7 @@ public class MainVerticle extends AbstractVerticle {
 			ctx.clearUser();
 			ctx.response().putHeader("location", "/login.html").setStatusCode(FOUND.code()).end();
 		});
-		router.route("/login.html").handler(StaticHandler.create());
+		router.routeWithRegex("^/(?!api/).*$").handler(StaticHandler.create());
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
 	}
 

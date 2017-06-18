@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>${spring-boot.version}</version>
+		<version>1.4.2.RELEASE</version>
 	</parent>
 	<properties>
 		<guava.version>20.0</guava.version>
@@ -22,8 +22,6 @@
 		<spock.version>1.1-groovy-2.4</spock.version>
 		<log4j2.version>2.7</log4j2.version>
 		<slf4j.version>1.7.21</slf4j.version>
-		<spring-boot.version>1.5.4.RELEASE</spring-boot.version>
-		<vertx-spring-ext.version>2.1</vertx-spring-ext.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -40,6 +38,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>ch.qos.logback</groupId>
+					<artifactId>logback-classic</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -62,11 +66,6 @@
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-auth-shiro</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jacpfx.vertx.spring</groupId>
-			<artifactId>vertx-spring-ext</artifactId>
-			<version>${vertx-spring-ext.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

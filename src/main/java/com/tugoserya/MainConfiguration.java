@@ -13,6 +13,11 @@ import org.springframework.context.annotation.Configuration;
 public class MainConfiguration {
 
 	@Bean
+	public SpringVerticleFactory springVerticleFactory() {
+		return new SpringVerticleFactory();
+	}
+
+	@Bean
 	public Vertx vertx() {
 		return Vertx.vertx();
 	}

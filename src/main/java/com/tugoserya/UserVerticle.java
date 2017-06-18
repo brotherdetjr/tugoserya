@@ -5,7 +5,6 @@ import com.tugoserya.services.AccountService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
-import org.jacpfx.vertx.spring.SpringVerticle;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,7 +14,6 @@ import static com.tugoserya.utils.Utils.ifInRole;
 import static com.tugoserya.utils.Utils.toJson;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@SpringVerticle(springConfig=MainConfiguration.class)
 public class UserVerticle extends AbstractVerticle {
 
 	private static final Logger log = getLogger(UserVerticle.class);
