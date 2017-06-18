@@ -20,6 +20,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class Utils {
 	public static final DateTimeFormatter YYYYMMDD = ofPattern("yyyyMMdd");
+	public static final String DEPLOYMENT_EVENTS = "deployment.events";
 
 	private static final Logger log = getLogger(Utils.class);
 
