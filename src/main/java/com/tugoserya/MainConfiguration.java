@@ -4,6 +4,7 @@ import com.tugoserya.services.AccountService;
 import com.tugoserya.services.AccountServiceImpl;
 import com.tugoserya.services.AdminService;
 import com.tugoserya.services.AdminServiceImpl;
+import com.tugoserya.utils.SpringVerticleFactory;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import org.springframework.context.annotation.Bean;

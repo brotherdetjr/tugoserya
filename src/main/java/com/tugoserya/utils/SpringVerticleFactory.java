@@ -1,4 +1,4 @@
-package com.tugoserya;
+package com.tugoserya.utils;
 
 import io.vertx.core.Verticle;
 import io.vertx.core.spi.VerticleFactory;
