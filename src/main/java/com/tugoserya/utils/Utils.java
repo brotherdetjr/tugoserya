@@ -2,6 +2,7 @@ package com.tugoserya.utils;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
@@ -26,7 +27,11 @@ public class Utils {
 		throw new AssertionError();
 	}
 
-	public static Future<RoutingContext> whenAuthorized(RoutingContext ctx, String authority) {
+	public static IfInRole ifInRole(String authority) {
+		return new IfInRole(authority);
+	}
+
+	public static Future<RoutingContext> checkRole(RoutingContext ctx, String authority) {
 		Future<RoutingContext> future = future();
 		try {
 			ctx.user().isAuthorised(authority, authorized -> {
@@ -46,8 +51,8 @@ public class Utils {
 		return future;
 	}
 
-	public static Future<RoutingContext> safely(RoutingContext ctx, Future<?> future) {
-		return future.otherwise(throwable -> {
+	public static <T> Function<Throwable, T> fail(RoutingContext ctx) {
+		return throwable -> {
 			log.error(getStackTraceAsString(throwable));
 			int status;
 			if (throwable instanceof HttpResponseException) {
@@ -57,16 +62,33 @@ public class Utils {
 			}
 			ctx.fail(status);
 			return null;
-		}).map(ctx);
+		};
 	}
 
-	public static <T> Function<T, Future<Void>> toJson(RoutingContext ctx) {
+	public static <T> Function<T, Future<Void>> sendJson(RoutingContext ctx) {
 		return value -> {
 			ctx.response()
 				.putHeader("content-type", "application/json; charset=utf-8")
-				.end(Json.encodePrettily(value));
+				.end(Json.encode(value));
 			return succeededFuture();
 		};
+	}
+
+	public static <T> Handler<RoutingContext> toJson(Function<RoutingContext, Future<T>> func) {
+		return ctx -> succeededFuture(ctx).compose(func).compose(sendJson(ctx)).otherwise(fail(ctx));
+	}
+
+	public static class IfInRole {
+		private final String role;
+
+		public IfInRole(String role) {
+			this.role = role;
+		}
+
+		public Handler<RoutingContext> then(Handler<RoutingContext> handler) {
+			return ctx -> checkRole(ctx, role).map(c -> {handler.handle(c); return c; });
+		}
+
 	}
 
 	public static <T> Future<T> forbid() {

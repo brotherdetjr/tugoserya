@@ -30,9 +30,8 @@ import java.time.LocalDate;
 
 import static com.tugoserya.utils.Utils.currentUserName;
 import static com.tugoserya.utils.Utils.forbid;
-import static com.tugoserya.utils.Utils.safely;
+import static com.tugoserya.utils.Utils.ifInRole;
 import static com.tugoserya.utils.Utils.toJson;
-import static com.tugoserya.utils.Utils.whenAuthorized;
 import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.TEMPORARY_REDIRECT;
 import static io.vertx.ext.auth.shiro.PropertiesProviderConstants.PROPERTIES_PROPS_PATH_FIELD;
@@ -65,46 +64,27 @@ public class MainVerticle extends AbstractVerticle {
 			ctx.clearUser();
 			ctx.response().putHeader("location", "/login.html").setStatusCode(FOUND.code()).end();
 		});
-		router.get("/api/accounts").handler(ctx ->
-			safely(ctx, whenAuthorized(ctx, "accounts:get")
-				.compose(ignore -> adminService.getAccounts())
-				.compose(toJson(ctx))
-			)
-		);
-		router.delete("/api/accounts").handler(ctx ->
-			safely(ctx, whenAuthorized(ctx, "accounts:delete")
-				.compose(ignore -> {
-					String accountId = ctx.request().getParam("id");
-					if (!currentUserName(ctx).equals(accountId)) {
-						return adminService.removeAccount(accountId);
-					} else {
-						return forbid();
-					}
-				})
-				.map(true)
-				.compose(toJson(ctx))
-			)
-		);
-		router.get("/api/kids").handler(ctx ->
-			safely(ctx, whenAuthorized(ctx, "kids:get")
-				.compose(ignore -> accountService.getKids(currentUserName(ctx)))
-				.compose(toJson(ctx))
-			)
-		);
-		router.put("/api/kids").handler(ctx ->
-			safely(ctx, whenAuthorized(ctx, "kids:put")
-				.compose(ignore -> {
-					Kid kid = Json.decodeValue(ctx.getBodyAsString(), Kid.class);
-					if (currentUserName(ctx).equals(kid.getAccountId())) {
-						return accountService.putKid(kid);
-					} else {
-						return forbid();
-					}
-				})
-				.map(true)
-				.compose(toJson(ctx))
-			)
-		);
+		router.get("/api/accounts").handler(ifInRole("accounts:get").then(toJson(ctx -> adminService.getAccounts())));
+		router.delete("/api/accounts").handler(ifInRole("accounts:delete").then(toJson(ctx -> {
+				String accountId = ctx.request().getParam("id");
+				if (!currentUserName(ctx).equals(accountId)) {
+					return adminService.removeAccount(accountId).map(true);
+				} else {
+					return forbid();
+				}
+			})
+		));
+		router.get("/api/kids").handler(ifInRole("kids:get").then(toJson(ctx ->
+			accountService.getKids(currentUserName(ctx)))));
+		router.put("/api/kids").handler(ifInRole("kids:put").then(toJson(ctx -> {
+				Kid kid = Json.decodeValue(ctx.getBodyAsString(), Kid.class);
+				if (currentUserName(ctx).equals(kid.getAccountId())) {
+					return accountService.putKid(kid).map(true);
+				} else {
+					return forbid();
+				}
+			}
+		)));
 		router.route().handler(StaticHandler.create());
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
 	}
