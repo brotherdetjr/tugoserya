@@ -12,9 +12,8 @@ public class Application {
 		ApplicationContext context = new AnnotationConfigApplicationContext(MainConfiguration.class);
 		Vertx vertx = vertx();
 		vertx.registerVerticleFactory(context.getBean(SpringVerticleFactory.class));
-		vertx.deployVerticle("spring:" + MainVerticle.class.getName(), res -> {
-			vertx.deployVerticle("spring:" + AdminVerticle.class.getName());
-			vertx.deployVerticle("spring:" + UserVerticle.class.getName());
-		});
+		vertx.deployVerticle("spring:" + MainVerticle.class.getName());
+		vertx.deployVerticle("spring:" + AdminVerticle.class.getName());
+		vertx.deployVerticle("spring:" + UserVerticle.class.getName());
 	}
 }

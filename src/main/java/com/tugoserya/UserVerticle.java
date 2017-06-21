@@ -2,6 +2,7 @@ package com.tugoserya;
 
 import com.tugoserya.model.Kid;
 import com.tugoserya.services.AccountService;
+import com.tugoserya.utils.Dependencies;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
@@ -22,20 +23,25 @@ public class UserVerticle extends AbstractVerticle {
 	private Router router;
 	@Autowired
 	private AccountService accountService;
+	@Autowired
+	private Dependencies dependencies;
 
 
 	@Override
 	public void start() throws Exception {
-		router.get("/api/kids").handler(ifInRole("kids:get").then(toJson(ctx ->
-			accountService.getKids(currentUserName(ctx)))));
-		router.put("/api/kids").handler(ifInRole("kids:put").then(toJson(ctx -> {
-				Kid kid = Json.decodeValue(ctx.getBodyAsString(), Kid.class);
-				if (currentUserName(ctx).equals(kid.getAccountId())) {
-					return accountService.putKid(kid).map(true);
-				} else {
-					return forbid();
+		dependencies.waitFor(() -> {
+			router.get("/api/kids").handler(ifInRole("kids:get").then(toJson(ctx ->
+				accountService.getKids(currentUserName(ctx)))));
+			router.put("/api/kids").handler(ifInRole("kids:put").then(toJson(ctx -> {
+					Kid kid = Json.decodeValue(ctx.getBodyAsString(), Kid.class);
+					if (currentUserName(ctx).equals(kid.getAccountId())) {
+						return accountService.putKid(kid).map(true);
+					} else {
+						return forbid();
+					}
 				}
-			}
-		)));
+			)));
+			return "user";
+		}, "main");
 	}
 }

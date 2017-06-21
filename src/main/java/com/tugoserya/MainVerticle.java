@@ -2,6 +2,7 @@ package com.tugoserya;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.ImmutableMap;
+import com.tugoserya.utils.Dependencies;
 import com.tugoserya.utils.LocalDateDeserializer;
 import com.tugoserya.utils.LocalDateSerializer;
 import io.vertx.core.AbstractVerticle;
@@ -35,6 +36,8 @@ public class MainVerticle extends AbstractVerticle {
 
 	@Autowired
 	private Router router;
+	@Autowired
+	private Dependencies dependencies;
 
 	@Override
 	public void start() throws Exception {
@@ -62,6 +65,7 @@ public class MainVerticle extends AbstractVerticle {
 		});
 		router.routeWithRegex("^/(?!api/).*$").handler(StaticHandler.create());
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
+		dependencies.notify("main");
 	}
 
 }

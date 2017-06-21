@@ -1,6 +1,7 @@
 package com.tugoserya;
 
 import com.tugoserya.services.AdminService;
+import com.tugoserya.utils.Dependencies;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.ext.web.Router;
 import org.slf4j.Logger;
@@ -19,18 +20,24 @@ public class AdminVerticle extends AbstractVerticle {
 	private Router router;
 	@Autowired
 	private AdminService adminService;
+	@Autowired
+	private Dependencies dependencies;
 
 	@Override
 	public void start() throws Exception {
-		router.get("/api/accounts").handler(ifInRole("accounts:get").then(toJson(ctx -> adminService.getAccounts())));
-		router.delete("/api/accounts").handler(ifInRole("accounts:delete").then(toJson(ctx -> {
-				String accountId = ctx.request().getParam("id");
-				if (!currentUserName(ctx).equals(accountId)) {
-					return adminService.removeAccount(accountId).map(true);
-				} else {
-					return forbid();
-				}
-			})
-		));
+		dependencies.waitFor(() -> {
+			router.get("/api/accounts")
+				.handler(ifInRole("accounts:get").then(toJson(ctx -> adminService.getAccounts())));
+			router.delete("/api/accounts").handler(ifInRole("accounts:delete").then(toJson(ctx -> {
+					String accountId = ctx.request().getParam("id");
+					if (!currentUserName(ctx).equals(accountId)) {
+						return adminService.removeAccount(accountId).map(true);
+					} else {
+						return forbid();
+					}
+				})
+			));
+			return "admin";
+		}, "main");
 	}
 }
