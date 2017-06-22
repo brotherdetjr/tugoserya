@@ -25,7 +25,7 @@ public class AdminVerticle extends AbstractVerticle {
 
 	@Override
 	public void start() throws Exception {
-		dependencies.waitFor(() -> {
+		dependencies.having("main").register("admin").map(ignore -> {
 			router.get("/api/accounts")
 				.handler(ifInRole("accounts:get").then(toJson(ctx -> adminService.getAccounts())));
 			router.delete("/api/accounts").handler(ifInRole("accounts:delete").then(toJson(ctx -> {
@@ -37,7 +37,7 @@ public class AdminVerticle extends AbstractVerticle {
 					}
 				})
 			));
-			return "admin";
-		}, "main");
+			return null;
+		});
 	}
 }

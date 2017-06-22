@@ -47,6 +47,6 @@ public class MainConfiguration {
 
 	@Bean
 	public Dependencies dependencies(EventBus eventBus) {
-		return new Dependencies(eventBus, "verticle:deplpoyment", true);
+		return new Dependencies(eventBus, "dependencies:verticles");
 	}
 }

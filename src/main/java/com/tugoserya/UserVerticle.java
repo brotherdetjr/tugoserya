@@ -26,10 +26,9 @@ public class UserVerticle extends AbstractVerticle {
 	@Autowired
 	private Dependencies dependencies;
 
-
 	@Override
 	public void start() throws Exception {
-		dependencies.waitFor(() -> {
+		dependencies.having("main").register("user").map(ignore -> {
 			router.get("/api/kids").handler(ifInRole("kids:get").then(toJson(ctx ->
 				accountService.getKids(currentUserName(ctx)))));
 			router.put("/api/kids").handler(ifInRole("kids:put").then(toJson(ctx -> {
@@ -41,7 +40,7 @@ public class UserVerticle extends AbstractVerticle {
 					}
 				}
 			)));
-			return "user";
-		}, "main");
+			return null;
+		});
 	}
 }

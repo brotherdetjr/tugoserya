@@ -8,19 +8,24 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageCodec;
 import io.vertx.core.eventbus.MessageConsumer;
+import org.slf4j.Logger;
 
-import java.util.function.Supplier;
+import java.util.Set;
 
+import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.tugoserya.utils.Dependencies.MsgType.CHECK;
 import static com.tugoserya.utils.Dependencies.MsgType.NOTIFY;
 import static com.tugoserya.utils.Dependencies.MsgType.REPLY;
 import static com.tugoserya.utils.Dependencies.MsgType.fromInt;
 import static io.netty.util.CharsetUtil.US_ASCII;
 import static io.vertx.core.Future.future;
-import static java.util.Arrays.stream;
+import static io.vertx.core.Future.succeededFuture;
 import static java.util.stream.Collectors.toList;
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class Dependencies {
+
+	private static final Logger log = getLogger(Dependencies.class);
 
 	private final EventBus eventBus;
 	private final String address;
@@ -33,27 +38,45 @@ public class Dependencies {
 		eventBus.registerDefaultCodec(Msg.class, new MsgCodec());
 	}
 
-	public void waitFor(Supplier<String> everybodyIsHere, String... names) {
-		stream(names).forEach(name -> publish(Msg.check(name)));
-		CompositeFuture.all(
-			stream(names)
-				.map(this::waitFor)
-				.collect(toList())
-		).compose(f -> {
-			String myName = everybodyIsHere.get();
-			handler(m -> {
-				Msg msg = m.body();
-				MsgType type = msg.getType();
-				if ((myName.equals(msg.getName())) && (type == CHECK)) {
-					publish(Msg.reply(myName));
-				}
-			});
-			publish(Msg.notify(myName));
-			return null;
-		});
+	public Dependencies(EventBus eventBus, String address) {
+		this(eventBus, address, true);
 	}
 
-	public void notify(String name) {
+	public class Having {
+		private final Set<String> names;
+
+		public Having(Set<String> names) {
+			this.names = copyOf(names);
+		}
+
+		public Future<Void> register(String name) {
+			names.forEach(n -> publish(Msg.check(n)));
+			return CompositeFuture.all(
+				names.stream()
+					.map(Dependencies.this::waitFor)
+					.collect(toList())
+			).compose(f -> {
+				log.debug("Located all required dependencies {} for {}",
+					f.list().stream().map(m -> ((Msg) m).getName()).collect(toList()), name);
+				handler(m -> {
+					Msg msg = m.body();
+					MsgType type = msg.getType();
+					if ((name.equals(msg.getName())) && (type == CHECK)) {
+						publish(Msg.reply(name));
+					}
+				});
+				publish(Msg.notify(name));
+				return succeededFuture();
+			});
+		}
+	}
+
+	public Having having(String ... names) {
+		return new Having(copyOf(names));
+	}
+
+	public void register(String name) {
+		log.debug("Registering dependency {}", name);
 		publish(Msg.notify(name));
 	}
 
