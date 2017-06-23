@@ -6,6 +6,7 @@ import com.tugoserya.services.AdminService;
 import com.tugoserya.services.AdminServiceImpl;
 import com.tugoserya.utils.Dependencies;
 import com.tugoserya.utils.SpringVerticleFactory;
+import com.tugoserya.utils.WiredVerticleFactory;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.ext.web.Router;
@@ -18,6 +19,11 @@ public class MainConfiguration {
 	@Bean
 	public SpringVerticleFactory springVerticleFactory() {
 		return new SpringVerticleFactory();
+	}
+
+	@Bean
+	public WiredVerticleFactory wiredVerticleFactory(Dependencies dependencies) {
+		return new WiredVerticleFactory(dependencies);
 	}
 
 	@Bean

@@ -28,19 +28,16 @@ public class UserVerticle extends AbstractVerticle {
 
 	@Override
 	public void start() throws Exception {
-		dependencies.having("main").register("user").map(ignore -> {
-			router.get("/api/kids").handler(ifInRole("kids:get").then(toJson(ctx ->
-				accountService.getKids(currentUserName(ctx)))));
-			router.put("/api/kids").handler(ifInRole("kids:put").then(toJson(ctx -> {
-					Kid kid = Json.decodeValue(ctx.getBodyAsString(), Kid.class);
-					if (currentUserName(ctx).equals(kid.getAccountId())) {
-						return accountService.putKid(kid).map(true);
-					} else {
-						return forbid();
-					}
+		router.get("/api/kids").handler(ifInRole("kids:get").then(toJson(ctx ->
+			accountService.getKids(currentUserName(ctx)))));
+		router.put("/api/kids").handler(ifInRole("kids:put").then(toJson(ctx -> {
+				Kid kid = Json.decodeValue(ctx.getBodyAsString(), Kid.class);
+				if (currentUserName(ctx).equals(kid.getAccountId())) {
+					return accountService.putKid(kid).map(true);
+				} else {
+					return forbid();
 				}
-			)));
-			return null;
-		});
+			}
+		)));
 	}
 }

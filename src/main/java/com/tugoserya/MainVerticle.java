@@ -65,7 +65,6 @@ public class MainVerticle extends AbstractVerticle {
 		});
 		router.routeWithRegex("^/(?!api/).*$").handler(StaticHandler.create());
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
-		dependencies.register("main");
 	}
 
 }

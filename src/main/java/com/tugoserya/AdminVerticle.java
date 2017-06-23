@@ -25,19 +25,16 @@ public class AdminVerticle extends AbstractVerticle {
 
 	@Override
 	public void start() throws Exception {
-		dependencies.having("main").register("admin").map(ignore -> {
-			router.get("/api/accounts")
-				.handler(ifInRole("accounts:get").then(toJson(ctx -> adminService.getAccounts())));
-			router.delete("/api/accounts").handler(ifInRole("accounts:delete").then(toJson(ctx -> {
-					String accountId = ctx.request().getParam("id");
-					if (!currentUserName(ctx).equals(accountId)) {
-						return adminService.removeAccount(accountId).map(true);
-					} else {
-						return forbid();
-					}
-				})
-			));
-			return null;
-		});
+		router.get("/api/accounts")
+			.handler(ifInRole("accounts:get").then(toJson(ctx -> adminService.getAccounts())));
+		router.delete("/api/accounts").handler(ifInRole("accounts:delete").then(toJson(ctx -> {
+				String accountId = ctx.request().getParam("id");
+				if (!currentUserName(ctx).equals(accountId)) {
+					return adminService.removeAccount(accountId).map(true);
+				} else {
+					return forbid();
+				}
+			})
+		));
 	}
 }

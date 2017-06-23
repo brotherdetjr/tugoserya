@@ -1,6 +1,7 @@
 package com.tugoserya.utils;
 
 import io.vertx.core.CompositeFuture;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -8,8 +9,12 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageCodec;
 import io.vertx.core.eventbus.MessageConsumer;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableSet.copyOf;
@@ -20,6 +25,7 @@ import static com.tugoserya.utils.Dependencies.MsgType.fromInt;
 import static io.netty.util.CharsetUtil.US_ASCII;
 import static io.vertx.core.Future.future;
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -40,6 +46,15 @@ public class Dependencies {
 
 	public Dependencies(EventBus eventBus, String address) {
 		this(eventBus, address, true);
+	}
+
+	public static DeploymentOptions toOptions(String wiredName, List<String> depList) {
+		JsonObject config = new JsonObject().put("wired.deps", new JsonArray(depList)).put("wired.name", wiredName);
+		return new DeploymentOptions().setConfig(config);
+	}
+
+	public static DeploymentOptions toOptions(String wiredName) {
+		return toOptions(wiredName, emptyList());
 	}
 
 	public class Having {
@@ -72,6 +87,10 @@ public class Dependencies {
 	}
 
 	public Having having(String ... names) {
+		return new Having(copyOf(names));
+	}
+
+	public Having having(Collection<String> names) {
 		return new Having(copyOf(names));
 	}
 
