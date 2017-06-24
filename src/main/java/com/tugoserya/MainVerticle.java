@@ -2,7 +2,7 @@ package com.tugoserya;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.ImmutableMap;
-import com.tugoserya.utils.Dependencies;
+import com.tugoserya.utils.Wiring;
 import com.tugoserya.utils.LocalDateDeserializer;
 import com.tugoserya.utils.LocalDateSerializer;
 import io.vertx.core.AbstractVerticle;
@@ -37,7 +37,7 @@ public class MainVerticle extends AbstractVerticle {
 	@Autowired
 	private Router router;
 	@Autowired
-	private Dependencies dependencies;
+	private Wiring wiring;
 
 	@Override
 	public void start() throws Exception {

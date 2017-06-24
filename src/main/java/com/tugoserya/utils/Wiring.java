@@ -17,38 +17,43 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static com.tugoserya.utils.Dependencies.MsgType.CHECK;
-import static com.tugoserya.utils.Dependencies.MsgType.NOTIFY;
-import static com.tugoserya.utils.Dependencies.MsgType.REPLY;
-import static com.tugoserya.utils.Dependencies.MsgType.fromInt;
+import static com.tugoserya.utils.Wiring.MsgType.CHECK;
+import static com.tugoserya.utils.Wiring.MsgType.NOTIFY;
+import static com.tugoserya.utils.Wiring.MsgType.REPLY;
+import static com.tugoserya.utils.Wiring.MsgType.fromInt;
 import static io.netty.util.CharsetUtil.US_ASCII;
 import static io.vertx.core.Future.future;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class Dependencies {
+public class Wiring {
 
-	private static final Logger log = getLogger(Dependencies.class);
+	private static final Logger log = getLogger(Wiring.class);
 
 	private final EventBus eventBus;
 	private final String address;
 	private final boolean local;
 
-	public Dependencies(EventBus eventBus, String address, boolean local) {
+	public Wiring(EventBus eventBus, String address, boolean local) {
 		this.eventBus = eventBus;
 		this.address = address;
 		this.local = local;
 		eventBus.registerDefaultCodec(Msg.class, new MsgCodec());
 	}
 
-	public Dependencies(EventBus eventBus, String address) {
+	public Wiring(EventBus eventBus, String address) {
 		this(eventBus, address, true);
 	}
 
 	public static DeploymentOptions toOptions(String wiredName, List<String> depList) {
 		JsonObject config = new JsonObject().put("wired.deps", new JsonArray(depList)).put("wired.name", wiredName);
 		return new DeploymentOptions().setConfig(config);
+	}
+
+	public static DeploymentOptions toOptions(String wiredName, String... deps) {
+		return toOptions(wiredName, asList(deps));
 	}
 
 	public static DeploymentOptions toOptions(String wiredName) {
@@ -59,7 +64,7 @@ public class Dependencies {
 		names.forEach(n -> publish(Msg.check(n)));
 		return CompositeFuture.all(
 			names.stream()
-				.map(Dependencies.this::waitFor)
+				.map(Wiring.this::waitFor)
 				.collect(toList())
 		).map(f -> {
 			log.debug("Located all required dependencies {}",

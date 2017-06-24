@@ -2,7 +2,7 @@ package com.tugoserya;
 
 import com.tugoserya.model.Kid;
 import com.tugoserya.services.AccountService;
-import com.tugoserya.utils.Dependencies;
+import com.tugoserya.utils.Wiring;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
@@ -24,7 +24,7 @@ public class UserVerticle extends AbstractVerticle {
 	@Autowired
 	private AccountService accountService;
 	@Autowired
-	private Dependencies dependencies;
+	private Wiring wiring;
 
 	@Override
 	public void start() throws Exception {

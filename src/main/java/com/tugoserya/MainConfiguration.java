@@ -4,7 +4,7 @@ import com.tugoserya.services.AccountService;
 import com.tugoserya.services.AccountServiceImpl;
 import com.tugoserya.services.AdminService;
 import com.tugoserya.services.AdminServiceImpl;
-import com.tugoserya.utils.Dependencies;
+import com.tugoserya.utils.Wiring;
 import com.tugoserya.utils.SpringVerticleFactory;
 import com.tugoserya.utils.WiredVerticleFactory;
 import io.vertx.core.Vertx;
@@ -22,8 +22,8 @@ public class MainConfiguration {
 	}
 
 	@Bean
-	public WiredVerticleFactory wiredVerticleFactory(Dependencies dependencies) {
-		return new WiredVerticleFactory(dependencies);
+	public WiredVerticleFactory wiredVerticleFactory(Wiring wiring) {
+		return new WiredVerticleFactory(wiring);
 	}
 
 	@Bean
@@ -52,7 +52,7 @@ public class MainConfiguration {
 	}
 
 	@Bean
-	public Dependencies dependencies(EventBus eventBus) {
-		return new Dependencies(eventBus, "dependencies:verticles");
+	public Wiring dependencies(EventBus eventBus) {
+		return new Wiring(eventBus, "dependencies:verticles");
 	}
 }

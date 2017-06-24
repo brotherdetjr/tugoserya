@@ -1,7 +1,7 @@
 package com.tugoserya;
 
 import com.tugoserya.services.AdminService;
-import com.tugoserya.utils.Dependencies;
+import com.tugoserya.utils.Wiring;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.ext.web.Router;
 import org.slf4j.Logger;
@@ -21,7 +21,7 @@ public class AdminVerticle extends AbstractVerticle {
 	@Autowired
 	private AdminService adminService;
 	@Autowired
-	private Dependencies dependencies;
+	private Wiring wiring;
 
 	@Override
 	public void start() throws Exception {

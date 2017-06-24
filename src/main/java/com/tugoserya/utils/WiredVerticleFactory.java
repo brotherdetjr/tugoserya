@@ -16,10 +16,10 @@ public class WiredVerticleFactory implements VerticleFactory {
 
 	private static final Logger log = getLogger(WiredVerticleFactory.class);
 
-	private final Dependencies dependencies;
+	private final Wiring wiring;
 
-	public WiredVerticleFactory(Dependencies dependencies) {
-		this.dependencies = dependencies;
+	public WiredVerticleFactory(Wiring wiring) {
+		this.wiring = wiring;
 	}
 
 	@Override
@@ -45,9 +45,9 @@ public class WiredVerticleFactory implements VerticleFactory {
 			JsonArray deps = config().getJsonArray("wired.deps");
 			if (deps != null && !deps.isEmpty()) {
 				@SuppressWarnings("unchecked") List<String> depsList = deps.getList();
-				dependencies.waitFor(depsList).map(this::deployVerticle);
+				wiring.waitFor(depsList).map(this::deployVerticle);
 			} else {
-				deployVerticle(ignore -> dependencies.register(config().getString("wired.name")));
+				deployVerticle(ignore -> wiring.register(config().getString("wired.name")));
 			}
 		}
 
