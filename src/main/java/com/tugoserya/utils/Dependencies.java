@@ -15,16 +15,14 @@ import org.slf4j.Logger;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Consumer;
 
-import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.tugoserya.utils.Dependencies.MsgType.CHECK;
 import static com.tugoserya.utils.Dependencies.MsgType.NOTIFY;
 import static com.tugoserya.utils.Dependencies.MsgType.REPLY;
 import static com.tugoserya.utils.Dependencies.MsgType.fromInt;
 import static io.netty.util.CharsetUtil.US_ASCII;
 import static io.vertx.core.Future.future;
-import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -57,22 +55,16 @@ public class Dependencies {
 		return toOptions(wiredName, emptyList());
 	}
 
-	public class Having {
-		private final Set<String> names;
-
-		public Having(Set<String> names) {
-			this.names = copyOf(names);
-		}
-
-		public Future<Void> register(String name) {
-			names.forEach(n -> publish(Msg.check(n)));
-			return CompositeFuture.all(
-				names.stream()
-					.map(Dependencies.this::waitFor)
-					.collect(toList())
-			).compose(f -> {
-				log.debug("Located all required dependencies {} for {}",
-					f.list().stream().map(m -> ((Msg) m).getName()).collect(toList()), name);
+	public Future<Consumer<String>> waitFor(Collection<String> names) {
+		names.forEach(n -> publish(Msg.check(n)));
+		return CompositeFuture.all(
+			names.stream()
+				.map(Dependencies.this::waitFor)
+				.collect(toList())
+		).map(f -> {
+			log.debug("Located all required dependencies {}",
+				f.list().stream().map(m -> ((Msg) m).getName()).collect(toList()));
+			return name -> {
 				handler(m -> {
 					Msg msg = m.body();
 					MsgType type = msg.getType();
@@ -81,17 +73,8 @@ public class Dependencies {
 					}
 				});
 				publish(Msg.notify(name));
-				return succeededFuture();
-			});
-		}
-	}
-
-	public Having having(String ... names) {
-		return new Having(copyOf(names));
-	}
-
-	public Having having(Collection<String> names) {
-		return new Having(copyOf(names));
+			};
+		});
 	}
 
 	public void register(String name) {

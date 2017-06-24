@@ -4,12 +4,17 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.spi.VerticleFactory;
+import org.slf4j.Logger;
 
-import static java.util.Objects.requireNonNull;
+import java.util.List;
+import java.util.function.Consumer;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class WiredVerticleFactory implements VerticleFactory {
+
+	private static final Logger log = getLogger(WiredVerticleFactory.class);
 
 	private final Dependencies dependencies;
 
@@ -35,27 +40,29 @@ public class WiredVerticleFactory implements VerticleFactory {
 			this.verticleName = verticleName;
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public void start() throws Exception {
-			JsonObject config = vertx.getOrCreateContext().config();
-			JsonArray deps = config.getJsonArray("wired.deps");
-			String name = config.getString("wired.name");
-			requireNonNull(name);
-			if (deps != null) {
-				dependencies.having(deps.getList()).register(name).map(ignore -> { deployVerticle(); return null; });
+			JsonArray deps = config().getJsonArray("wired.deps");
+			if (deps != null && !deps.isEmpty()) {
+				@SuppressWarnings("unchecked") List<String> depsList = deps.getList();
+				dependencies.waitFor(depsList).map(this::deployVerticle);
 			} else {
-				dependencies.register(name);
-				deployVerticle();
+				deployVerticle(ignore -> dependencies.register(config().getString("wired.name")));
 			}
 		}
 
-		private void deployVerticle() {
+		private String deployVerticle(Consumer<String> registrar) {
+			String name = VerticleFactory.removePrefix(verticleName);
+			log.debug("Deploying verticle {}", name);
 			vertx.deployVerticle(
-				VerticleFactory.removePrefix(verticleName),
+				name,
 				new DeploymentOptions(vertx.getOrCreateContext().config()),
-				ignore2 -> vertx.undeploy(verticleName)
+				ignore -> {
+					vertx.undeploy(verticleName);
+					registrar.accept(config().getString("wired.name"));
+				}
 			);
+			return name;
 		}
 	}
 }
