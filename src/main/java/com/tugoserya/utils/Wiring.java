@@ -44,7 +44,7 @@ public class Wiring {
 	}
 
 	public Wiring(EventBus eventBus, String address) {
-		this(eventBus, address, true);
+		this(eventBus, address, false);
 	}
 
 	public static DeploymentOptions toOptions(String wiredName, List<String> depList) {

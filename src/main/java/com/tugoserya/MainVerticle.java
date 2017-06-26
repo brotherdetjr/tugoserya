@@ -2,7 +2,6 @@ package com.tugoserya;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.ImmutableMap;
-import com.tugoserya.utils.Wiring;
 import com.tugoserya.utils.LocalDateDeserializer;
 import com.tugoserya.utils.LocalDateSerializer;
 import io.vertx.core.AbstractVerticle;
@@ -34,10 +33,7 @@ public class MainVerticle extends AbstractVerticle {
 
 	private static final Logger log = getLogger(MainVerticle.class);
 
-	@Autowired
 	private Router router;
-	@Autowired
-	private Wiring wiring;
 
 	@Override
 	public void start() throws Exception {
@@ -55,16 +51,19 @@ public class MainVerticle extends AbstractVerticle {
 		router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx)));
 		router.route().handler(UserSessionHandler.create(authProvider));
 		router.route("/").handler(ctx ->
-			ctx.response().putHeader("location", "/login.html").setStatusCode(TEMPORARY_REDIRECT.code()).end()
+			ctx.response().putHeader("location", "/static/login.html").setStatusCode(TEMPORARY_REDIRECT.code()).end()
 		);
-		router.route("/api/*").handler(RedirectAuthHandler.create(authProvider, "/login.html"));
+		router.route("/api/*").handler(RedirectAuthHandler.create(authProvider, "/static/login.html"));
 		router.route("/login").handler(FormLoginHandler.create(authProvider));
 		router.route("/logout").handler(ctx -> {
 			ctx.clearUser();
-			ctx.response().putHeader("location", "/login.html").setStatusCode(FOUND.code()).end();
+			ctx.response().putHeader("location", "/static/login.html").setStatusCode(FOUND.code()).end();
 		});
-		router.routeWithRegex("^/(?!api/).*$").handler(StaticHandler.create());
+		router.route("/static/*").handler(StaticHandler.create());
 		vertx.createHttpServer().requestHandler(router::accept).listen(8080);
 	}
 
+	public void setRouter(Router router) {
+		this.router = router;
+	}
 }

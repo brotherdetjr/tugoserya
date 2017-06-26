@@ -19,18 +19,15 @@ public class UserVerticle extends AbstractVerticle {
 
 	private static final Logger log = getLogger(UserVerticle.class);
 
-	@Autowired
 	private Router router;
-	@Autowired
 	private AccountService accountService;
-	@Autowired
-	private Wiring wiring;
 
 	@Override
 	public void start() throws Exception {
-		router.get("/api/kids").handler(ifInRole("kids:get").then(toJson(ctx ->
+		Router kidsApi = Router.router(vertx);
+		kidsApi.get("/kids").handler(ifInRole("kids:get").then(toJson(ctx ->
 			accountService.getKids(currentUserName(ctx)))));
-		router.put("/api/kids").handler(ifInRole("kids:put").then(toJson(ctx -> {
+		kidsApi.put("/kids").handler(ifInRole("kids:put").then(toJson(ctx -> {
 				Kid kid = Json.decodeValue(ctx.getBodyAsString(), Kid.class);
 				if (currentUserName(ctx).equals(kid.getAccountId())) {
 					return accountService.putKid(kid).map(true);
@@ -39,5 +36,14 @@ public class UserVerticle extends AbstractVerticle {
 				}
 			}
 		)));
+		router.mountSubRouter("/api", kidsApi);
+	}
+
+	public void setRouter(Router router) {
+		this.router = router;
+	}
+
+	public void setAccountService(AccountService accountService) {
+		this.accountService = accountService;
 	}
 }
